@@ -177,6 +177,7 @@ var Board = &pintable.Board{
 	Headers:    headers,
 	AnalogPins: analogPins,
 	Stringer:   stringer,
+	PinEnd:     int(PEND),
 }
 
 // TODO delete

@@ -10,7 +10,7 @@ import (
 	"github.com/empirefox/firmata"
 )
 
-type PinMode int
+type PinMode byte
 
 const (
 	I       PinMode = 0x00 // same as INPUT defined in Arduino.h
@@ -28,9 +28,8 @@ const (
 	X       PinMode = 0x7F // pin configured to be ignored by digitalWrite and capabilityResponse
 )
 
-func NewPinMode(mode int) fmt.Stringer {
-	var pm interface{} = PinMode(mode)
-	return pm.(fmt.Stringer)
+func NewPinMode(mode byte) fmt.Stringer {
+	return (interface{})(PinMode(mode)).(fmt.Stringer)
 }
 
 type Header struct {
@@ -44,6 +43,7 @@ type Board struct {
 	Headers    []Header
 	AnalogPins []int
 	Stringer   func(pid int) fmt.Stringer
+	PinEnd     int
 }
 
 type headerPin struct {
@@ -54,7 +54,7 @@ type headerPin struct {
 	Mode          string
 	Value         int
 	State         int
-	AnalogChannel int
+	AnalogChannel byte
 	Digital       int
 }
 
@@ -109,18 +109,18 @@ func (board *Board) HeaderToMarkdownTable(allpins []*firmata.Pin, header Header)
 			pin := allpins[pid]
 			ms := make([]int, len(pin.Modes))
 			for m := range pin.Modes {
-				ms = append(ms, m)
+				ms = append(ms, int(m))
 			}
 			sort.Ints(ms)
 			modes := make([]string, len(pin.Modes))
 			for m := range ms {
-				modes = append(modes, NewPinMode(m).(fmt.Stringer).String())
+				modes = append(modes, NewPinMode(byte(m)).String())
 			}
 			hp = &headerPin{
 				ID:            fid,
 				Name:          board.Stringer(pid).(fmt.Stringer).String(),
 				Modes:         modes,
-				Mode:          NewPinMode(pin.Mode).(fmt.Stringer).String(),
+				Mode:          NewPinMode(pin.Mode).String(),
 				Value:         pin.Value,
 				State:         pin.State,
 				AnalogChannel: pin.AnalogChannel,
@@ -128,7 +128,7 @@ func (board *Board) HeaderToMarkdownTable(allpins []*firmata.Pin, header Header)
 			}
 			for aid, atop := range board.AnalogPins {
 				if atop == pid {
-					hp.AnalogChannel = aid
+					hp.AnalogChannel = byte(aid)
 					break
 				}
 			}
